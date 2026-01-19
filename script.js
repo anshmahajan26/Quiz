@@ -263,6 +263,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     initSections();
 
+
+
     function startQuiz(index) {
         let questionBank = quizData.sections[index].questions;
         let currentQuestionIndex = 0;
@@ -275,7 +277,47 @@ document.addEventListener("DOMContentLoaded", function () {
         showQuestion();
 
         function showQuestion() {
-            document.getElementById("question").innerText = questionBank[currentQuestionIndex].question;
+            const question = currentQuestions[currentQuestionIndex];
+            const questionElement = document.getElementById("question");
+            const optionsElement = document.getElementById("options");
+
+            questionElement.textContent = question.question;
+            optionsElement.innerHTML = "";
+            if (question.questionType === "mcq") {
+                question.options.forEach(option => {
+                    const optionElement = document.createElement("div");
+                    optionElement.textContent = option;
+                    optionElement.className = "option";
+
+                    optionElement.addEventListener("click", function () {
+                        if (!answerSelected) {
+                            answerSelected = true;
+                            highlightSelectedOption(optionElement);
+                            checkAnswer(option, question.answer);
+                        }
+                    });
+
+                    optionsElement.appendChild(optionElement);
+                });
+
+            } else {
+                const input = document.createElement("input");
+                input.type = question.questionType === "number" ? "number" : "text";
+
+                const submitBtn = document.createElement("button");
+                submitBtn.textContent = "Submit Answer";
+
+                submitBtn.onclick = () => {
+                    if (!answerSelected) {
+                        answerSelected = true;
+                        checkAnswer(input.value, question.answer);
+                    }
+                };
+
+                optionsElement.appendChild(input);
+                optionsElement.appendChild(submitBtn);
+            }
+
         }
 
         document.getElementById("next-button").addEventListener("click", () => {
@@ -288,6 +330,43 @@ document.addEventListener("DOMContentLoaded", function () {
         })
 
     }
+    function checkAnswer(userAnswer, correctAnswer) {
+    if (String(userAnswer).trim() === String(correctAnswer)) {
+      score++;
+      updateScore();
+    }
+  }
+
+  /* ------------------ HIGHLIGHT ------------------ */
+  function highlightSelectedOption(selected) {
+    document.querySelectorAll(".option").forEach(opt => {
+      opt.classList.remove("selected");
+    });
+    selected.classList.add("selected");
+  }
+
+  /* ------------------ NEXT BUTTON ------------------ */
+  document.getElementById("next-button").addEventListener("click", () => {
+    if (currentQuestionIndex < currentQuestions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion();
+    } else {
+      showResult();
+    }
+  });
+
+  /* ------------------ SCORE ------------------ */
+  function updateScore() {
+    document.getElementById("score").textContent = `Score: ${score}`;
+  }
+
+  /* ------------------ RESULT ------------------ */
+  function showResult() {
+    document.getElementById("question-container").classList.add("hidden");
+    document.getElementById("result-container").classList.remove("hidden");
+    document.getElementById("final-score").textContent =
+      `Final Score: ${score}`;
+  }
 
 })
 
