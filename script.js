@@ -274,12 +274,69 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("quiz-container").style.display = "none";
         document.getElementById("question-container").style.display = "block";
 
-        showQuestion();
+        // Define helper functions inside startQuiz to access shared variables
+        function checkAnswer(userAnswer, correctAnswer) {
+            if (String(userAnswer).trim() === String(correctAnswer)) {
+                score++;
+                updateScore();
+                // Show feedback for correct answer
+                showFeedback("Correct!", "correct");
+            } else {
+                // Show feedback for incorrect answer with correct answer
+                showFeedback(`Incorrect. The correct answer is: ${correctAnswer}`, "incorrect");
+            }
+        }
+
+        /* ------------------ FEEDBACK ------------------ */
+        function showFeedback(message, type) {
+            // Create or update feedback element
+            let feedbackElement = document.getElementById("feedback");
+            if (!feedbackElement) {
+                feedbackElement = document.createElement("div");
+                feedbackElement.id = "feedback";
+                document.getElementById("options").appendChild(feedbackElement);
+            }
+
+            feedbackElement.textContent = message;
+            feedbackElement.className = `feedback ${type}`;
+
+            // Clear feedback after a delay to avoid cluttering the interface
+            setTimeout(() => {
+                if (feedbackElement && feedbackElement.parentNode) {
+                    feedbackElement.parentNode.removeChild(feedbackElement);
+                }
+            }, 2000); // Remove feedback after 2 seconds
+        }
+
+        /* ------------------ HIGHLIGHT ------------------ */
+        function highlightSelectedOption(selected) {
+            document.querySelectorAll(".option").forEach(opt => {
+                opt.classList.remove("selected");
+            });
+            selected.classList.add("selected");
+        }
+
+        /* ------------------ SCORE ------------------ */
+        function updateScore() {
+            document.getElementById("score").textContent = `Score: ${score}`;
+        }
+
+        /* ------------------ RESULT ------------------ */
+        function showResult() {
+            document.getElementById("question-container").classList.add("hidden");
+            document.getElementById("result-container").classList.remove("hidden");
+            document.getElementById("final-score").innerHTML = `<h2>Well Done!</h2><p>Your Score: ${score} out of ${questionBank.length}</p>`;
+        }
 
         function showQuestion() {
-            const question = currentQuestions[currentQuestionIndex];
+            const question = questionBank[currentQuestionIndex];
             const questionElement = document.getElementById("question");
             const optionsElement = document.getElementById("options");
+
+            // Reset answer selection for new question
+            answerSelected = false;
+            // Enable the next button by default (will be disabled for text inputs if needed)
+            document.getElementById("next-button").disabled = false;
 
             questionElement.textContent = question.question;
             optionsElement.innerHTML = "";
@@ -294,6 +351,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             answerSelected = true;
                             highlightSelectedOption(optionElement);
                             checkAnswer(option, question.answer);
+
+                            // Enable the next button after answering
+                            document.getElementById("next-button").disabled = false;
                         }
                     });
 
@@ -307,10 +367,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 const submitBtn = document.createElement("button");
                 submitBtn.textContent = "Submit Answer";
 
+                // Initially disable the next button for text/number inputs
+                document.getElementById("next-button").disabled = true;
+
                 submitBtn.onclick = () => {
                     if (!answerSelected) {
                         answerSelected = true;
                         checkAnswer(input.value, question.answer);
+
+                        // Enable the next button after answering
+                        document.getElementById("next-button").disabled = false;
                     }
                 };
 
@@ -327,46 +393,8 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 showResult();
             }
-        })
-
+        });
     }
-    function checkAnswer(userAnswer, correctAnswer) {
-    if (String(userAnswer).trim() === String(correctAnswer)) {
-      score++;
-      updateScore();
-    }
-  }
-
-  /* ------------------ HIGHLIGHT ------------------ */
-  function highlightSelectedOption(selected) {
-    document.querySelectorAll(".option").forEach(opt => {
-      opt.classList.remove("selected");
-    });
-    selected.classList.add("selected");
-  }
-
-  /* ------------------ NEXT BUTTON ------------------ */
-  document.getElementById("next-button").addEventListener("click", () => {
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-      currentQuestionIndex++;
-      showQuestion();
-    } else {
-      showResult();
-    }
-  });
-
-  /* ------------------ SCORE ------------------ */
-  function updateScore() {
-    document.getElementById("score").textContent = `Score: ${score}`;
-  }
-
-  /* ------------------ RESULT ------------------ */
-  function showResult() {
-    document.getElementById("question-container").classList.add("hidden");
-    document.getElementById("result-container").classList.remove("hidden");
-    document.getElementById("final-score").textContent =
-      `Final Score: ${score}`;
-  }
 
 })
 
